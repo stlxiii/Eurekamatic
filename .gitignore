@@ -1,0 +1,13 @@
+.venv/*
+extras/
+results/*
+*__pycache__*
+.pabotsuitenames
+redirect.html
+report.zip
+reports.html
+debug.robot
+debug.py
+debug.*.robot
+debug.*.py
+config.ini

@@ -1,0 +1,17 @@
+{
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
+    "terminal.integrated.rightClickBehavior": "default",
+    "terminal.integrated.tabs.enabled": false,
+    "terminal.integrated.tabs.showActions": "always",
+    "python.terminal.activateEnvironment": true,
+    "python.defaultInterpreterPath": ".venv\\Scripts\\python.exe",
+    "robotcode.robot.outputDir": "results",
+    "robotcode.robot.pythonPath": [
+        "./libs",
+        "./libs_shared",
+        "./resources",
+    ],
+    "robotcode.robot.args": [
+        "--loglevel=DEBUG:INFO"
+    ]
+}
