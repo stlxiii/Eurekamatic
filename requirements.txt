@@ -23,7 +23,6 @@ Pillow==9.3.0
 pyasn1==0.5.0
 pycparser==2.21
 Pygments==2.16.1
-pyodbc==4.0.34
 pysmb==1.2.7
 PySocks==1.7.1
 python-dotenv==1.0.0
