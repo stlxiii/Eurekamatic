@@ -15,9 +15,8 @@ ${EUREKA_URL_ADV_SEARCH}   https://nouveau-eureka-cc.ezproxy.usherbrooke.ca/Sear
 Get All Links
     [Arguments]          ${previous_list}
 
-    Repeat Keyword  5 times
-            ...    SeleniumLibrary.Press Keys   NONE    END
-            Sleep  5 seconds  # TODO: just wait until the spinner is not visible. Need to figure out its xpath.
+    
+            Sleep  3 seconds  # TODO: just wait until the spinner is not visible. Need to figure out its xpath.
 
     ${all_urls}          Create List
     ${all_web_elements}  SeleniumLibrary.Get WebElements  //a[@class="docList-links"]
@@ -27,6 +26,7 @@ Get All Links
         FOR  ${link}   IN   @{all_web_elements}
             ${link_href}    Get Element Attribute  ${link}  href
             Append To List  ${all_urls}            ${link_href}      
+            SeleniumLibrary.Press Keys   NONE    END
         END
     ELSE
         # If there's no new links, return the previous list
