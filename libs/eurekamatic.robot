@@ -157,7 +157,7 @@ Load Website And Login
         selenium.Click        submit
     END
     
-    SeleniumLibrary.Wait Until Location Is    ${EUREKA_URL_POST_LOGIN}
+    SeleniumLibrary.Wait Until Location Is    ${EUREKA_URL_POST_LOGIN}  5 minutes
     SeleniumLibrary.Go To                     ${EUREKA_URL_ADV_SEARCH}
 
 
