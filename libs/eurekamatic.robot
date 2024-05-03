@@ -8,33 +8,89 @@ ${DEFAULT_BROWSER}         Edge
 ${EUREKA_URL}              http://ezproxy.usherbrooke.ca/login?url=https://nouveau.eureka.cc/access/ip/default.aspx?un=unisher1
 ${EUREKA_URL_POST_LOGIN}   https://nouveau-eureka-cc.ezproxy.usherbrooke.ca/Search/Reading
 ${EUREKA_URL_ADV_SEARCH}   https://nouveau-eureka-cc.ezproxy.usherbrooke.ca/Search/AdvancedMobile
-
+${EUREKA_DOC_XPATH}        //div[@class="docContainer"]
 
 *** Keywords ***
 
-Get All Links
-    [Arguments]          ${previous_list}
-
+Download Article
+    [Arguments]  ${link_dict}
     
-            Sleep  3 seconds  # TODO: just wait until the spinner is not visible. Need to figure out its xpath.
+    seleniumLibrary.Go To           ${link_dict}[url]
+    Wait Until Element Is Visible   ${EUREKA_DOC_XPATH}
+    ${article_text}                 Get Article Text
+    ${article_html}                 seleniumLibrary.Get Source
+
+    ${article_dict}  Create Dictionary  
+    ...     url=${link_dict}[url]
+    ...     source=${link_dict}[source]
+    ...     title=${link_dict}[title]
+    ...     date=${link_dict}[date]
+    ...     text=${article_text}
+    ...     html=${article_html}
+    
+    RETURN  ${article_dict}
+
+
+Download All Articles
+    [Arguments]  ${all_urls}
+
+    ${articles_list}   Create List
+    ${counter}         Evaluate     0
+
+    FOR  ${url}  IN  @{all_urls}
+        ${counter}       Evaluate  $counter + 1
+        ${article_dict}  Download Article  ${url}
+        Append To List   ${articles_list}  ${article_dict} 
+    END
+
+    ${output_dict}  Create Dictionary
+    ...  articles=${articles_list}
+
+    OperatingSystem.Remove File        ${OUTPUT_DIR}${/}articles.json
+    OperatingSystem.Append To File     ${OUTPUT_DIR}${/}articles.json  ${{ json.dumps($output_dict) }}
+
+
+Get Article Text
+    VAR  ${article_text}
+    ${article_text}  Get Elem Text  ${article_text}  //article
+
+    RETURN  ${article_text}
+
+
+Get All Links
+    [Arguments]  ${previous_list}
+
+    SeleniumLibrary.Press Keys   NONE    END
+    Sleep  3 seconds  # TODO: just wait until the spinner is not visible. Need to figure out its xpath.
 
     ${all_urls}          Create List
-    ${all_web_elements}  SeleniumLibrary.Get WebElements  //a[@class="docList-links"]
+    ${all_web_elements}  SeleniumLibrary.Get WebElements    //div[@class="docListItem msDocItem"][@id]
 
     # Get all links but only if there's more of them than specified
     IF  len($all_web_elements) > len($previous_list)
         FOR  ${link}   IN   @{all_web_elements}
-            ${link_href}    Get Element Attribute  ${link}  href
-            Append To List  ${all_urls}            ${link_href}      
-            SeleniumLibrary.Press Keys   NONE    END
+            ${link_id}      Get Element Attribute    ${link}  id
+            ${link_xpath}   Set Variable             //div[@class="docListItem msDocItem"][@id="${link_id}"]
+
+            ${link_href}    Get Element Attribute    ${link_xpath}//a[@class="docList-links"]  href
+            ${link_title}   Get Elem Text  ${Empty}  ${link_xpath}//a[@class="docList-links"]
+            ${link_source}  Get Elem Text  ${Empty}  ${link_xpath}//span[@class="source-name"]
+            ${link_date}    Get Elem Text  ${Empty}  ${link_xpath}//span[@class="details"]
+
+            ${link_dict}    Create Dictionary
+            ...  title=${link_title}
+            ...  source=${link_source}
+            ...  date=${link_date}
+            ...  url=${link_href}
+
+            Append To List  ${all_urls}  ${link_dict}      
+            SeleniumLibrary.Press Keys   NONE     END
         END
     ELSE
         # If there's no new links, return the previous list
         RETURN  ${previous_list}
     END
 
-    # Remove duplicates
-    ${all_urls}     Evaluate  list(dict.fromkeys($all_urls)) 
     Log To Console  Found ${{ len($all_urls) }} links
     RETURN          ${all_urls}
 
@@ -69,17 +125,37 @@ Get All Links Until No More
         END
     END
     
-    RETURN  ${all_urls}
+    Log List  ${all_urls}
+    RETURN    ${all_urls}
+
+
+Get Elem Text
+    [Arguments]  ${previous_result}  ${elem}
+    
+    IF  $previous_result != ''
+        RETURN  ${previous_result}
+    END
+
+    TRY
+        ${elem_text}  seleniumLibrary.Get Text  ${elem}
+    EXCEPT
+        ${elem_text}  Set Variable   ${EMPTY}
+    END
+
+    RETURN  ${elem_text}
 
 
 Load Website And Login
     [Arguments]  ${eureka_username}  ${eureka_password}
     
+    SeleniumLibrary.Register Keyword To Run On Failure   No Operation
     selenium.Start Local Browser    ${EUREKA_URL}
 
-    selenium.Enter Text   username  ${eureka_username}
-    selenium.Enter Text   password  ${eureka_password}
-    selenium.Click        submit
+    IF  $eureka_username and $eureka_password and $eureka_username != '' and $eureka_password != ''
+        selenium.Enter Text   username  ${eureka_username}
+        selenium.Enter Text   password  ${eureka_password}
+        selenium.Click        submit
+    END
     
     SeleniumLibrary.Wait Until Location Is    ${EUREKA_URL_POST_LOGIN}
     SeleniumLibrary.Go To                     ${EUREKA_URL_ADV_SEARCH}
@@ -87,7 +163,7 @@ Load Website And Login
 
 Save Results
     ${all_urls}  Get All Links Until No More
-    Log List     ${all_urls}
+    Download All Articles   ${all_urls}
 
 
 Wait Until Results Are Loaded
