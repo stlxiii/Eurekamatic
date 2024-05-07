@@ -72,18 +72,22 @@ Get All Links
             ${link_id}      Get Element Attribute    ${link}  id
             ${link_xpath}   Set Variable             //div[@class="docListItem msDocItem"][@id="${link_id}"]
 
-            ${link_href}    Get Element Attribute    ${link_xpath}//a[@class="docList-links"]  href
-            ${link_title}   Get Elem Text  ${Empty}  ${link_xpath}//a[@class="docList-links"]
-            ${link_source}  Get Elem Text  ${Empty}  ${link_xpath}//span[@class="source-name"]
-            ${link_date}    Get Elem Text  ${Empty}  ${link_xpath}//span[@class="details"]
+            ${link_href}    Get Elem Attribute    ${Empty}  ${link_xpath}//a[@class="docList-links"]  href
+            ${link_title}   Get Elem Text         ${Empty}  ${link_xpath}//a[@class="docList-links"]
+            ${link_source}  Get Elem Text         ${Empty}  ${link_xpath}//span[@class="source-name"]
+            ${link_date}    Get Elem Text         ${Empty}  ${link_xpath}//span[@class="details"]
 
             ${link_dict}    Create Dictionary
             ...  title=${link_title}
             ...  source=${link_source}
             ...  date=${link_date}
             ...  url=${link_href}
-
-            Append To List  ${all_urls}  ${link_dict}      
+            
+            IF  $link_href and $link_href != ''
+                Append To List  ${all_urls}  ${link_dict}
+            ELSE
+                Log To Console  No href found for link id ${link_id}, skipping.
+            END
             SeleniumLibrary.Press Keys   NONE     END
         END
     ELSE
@@ -127,6 +131,22 @@ Get All Links Until No More
     
     Log List  ${all_urls}
     RETURN    ${all_urls}
+
+
+Get Elem Attribute
+    [Arguments]  ${previous_result}  ${elem}  ${attr}
+    
+    IF  $previous_result != ''
+        RETURN  ${previous_result}
+    END
+
+    TRY
+        ${elem_text}  seleniumLibrary.Get Element Attribute  ${elem}  ${attr}
+    EXCEPT
+        ${elem_text}  Set Variable   ${EMPTY}
+    END
+
+    RETURN  ${elem_text}
 
 
 Get Elem Text
