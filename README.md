@@ -2,6 +2,7 @@ Instructions
 - Installer Python 3.10: https://www.python.org/ftp/python/3.10.8/python-3.10.8-amd64.exe
 - Ouvrir invite de commande à l'endroit où le projet a été récupéré
 - Executer: python setup.py
+- Executer: .venv\Scripts\Activate.bat
 - Executer: robot --outputdir results start_eurekamatic.robot
 - Un navigateur Edge va ouvrir et se rendre à la page d'authentification
 - S'authentifier au site manuellent
